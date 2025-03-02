@@ -1,0 +1,38 @@
+@startuml
+!include https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма интеграции приложений - Банк 'Стандарт'
+LAYOUT_TOP_DOWN()
+
+' --- Граница (Container_Boundary) для сайта ---
+Container_Boundary(siteBank, 'Сайт (PHP + React)') {
+    Container(frontend, 'Frontend (React)', 'JavaScript/React', 'Фронтенд сайта, форма заявки на депозит')
+    Container(backend, 'Backend (PHP)', 'PHP', 'Обработка запросов, хранение временных данных')
+}
+
+' --- Остальные контейнеры ---
+Container(internetBank, 'Интернет-банк (.NET + MS SQL)', 'ASP.NET MVC 4.5', 'Монолитное приложение, личный кабинет клиента')
+Container(abs, 'АБС (Oracle)', 'Коммерческое решение на Oracle', 'Основной учётный контур банка (депозиты, кредиты, счета)')
+Container(callCenter, 'Система кол-центра (Java microservices + PostgreSQL)', 'Java Spring', 'Внутренний кол-центр банка, обрабатывает входящие/исходящие звонки')
+Container(telecom, 'Telecom (Cisco)', 'Аппаратно-программный комплекс', 'Система телефонии для маршрутизации звонков внутри банка')
+
+' --- Внешний контейнер ---
+Container_Ext(partnerCRM, 'CRM партнёрского кол-центра', 'Внешний SaaS/CRM', 'Система для работы операторов подрядчика')
+
+' --- Персоны (акторы) ---
+Person(client, 'Клиент')
+Person(boManager, 'Менеджер бэк-офиса')
+Person(partnerOperator, 'Оператор партнёрского кол-центра')
+Person(foManager, 'Менеджер фронт-офиса')
+
+' --- Связи (Rel) ---
+Rel(client, frontend, 'Заполняет форму заявки на депозит')
+Rel(frontend, backend, 'POST /api/applyDeposit (заявка)')
+Rel(backend, partnerCRM, 'REST API: передача заявки на депозит')
+Rel(partnerOperator, partnerCRM, 'Получает данные клиента, звонит ему')
+Rel(partnerCRM, boManager, 'При необходимости передаёт уточнения, особые ставки (через e-mail/портал)')
+Rel(boManager, abs, 'Создаёт депозит, вносит данные клиента')
+Rel(internetBank, abs, 'Синхронизация данных о счетах и депозитах')
+Rel(foManager, abs, 'Оформляет депозиты офлайн в отделении')
+Rel(callCenter, telecom, 'Интеграция для внутренних звонков')
+@enduml
