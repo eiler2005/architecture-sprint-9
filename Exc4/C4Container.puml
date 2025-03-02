@@ -1,0 +1,35 @@
+@startuml
+!include https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров — Передача ставок в кол-центр
+LAYOUT_TOP_DOWN()
+
+' --- Контейнеры внутри системы управления ставками ---
+Container_Boundary(ratesBoundary, "Система управления ставками") {
+    Container(ratesFrontend, "Rates Frontend (Web UI)", "React/Angular/Vue", "Интерфейс для маркетолога, вводит/редактирует ставки")
+    Container(ratesBackend, "Rates Backend (API)", "Java/Spring или .NET", "Обрабатывает данные, хранит ставки, обеспечивает интеграцию")
+    Container(ratesDB, "Rates DB", "PostgreSQL / MS SQL / Oracle", "Хранение маркетинговых ставок, промо-акций")
+}
+
+' --- Прочие контейнеры ---
+Container(abs, "АБС (Oracle)", "Oracle", "Основной реестр депозитов, базовые ставки")
+Container(site, "Сайт (PHP + React)", "PHP + React", "Отображает клиентам актуальные ставки")
+Container(internetBank, "Интернет-банк (.NET + MS SQL)", "ASP.NET MVC", "Личный кабинет, где клиент может увидеть ставки")
+Container_Ext(callCenterSystem, "Система кол-центра (CRM/Партнёр)", "SaaS/CRM", "Внешний кол-центр, получает ставки для операторов")
+
+' --- Персоны ---
+Person(marketManager, "Менеджер маркетинга")
+Person(callCenterOp, "Оператор кол-центра")
+
+' --- Связи ---
+Rel(marketManager, ratesFrontend, "Вводит/редактирует промо-ставки, условия")
+Rel(ratesFrontend, ratesBackend, "REST/HTTP (управление ставками)")
+Rel(ratesBackend, ratesDB, "Читает/записывает ставки")
+
+Rel(ratesBackend, abs, "Синхронизация с базовыми ставками (через API/хранимые процедуры)")
+Rel(ratesBackend, site, "Отправка актуальных ставок (REST API)")
+Rel(ratesBackend, internetBank, "Отправка актуальных ставок (REST API)")
+Rel(ratesBackend, callCenterSystem, "Передача ставок (REST/SFTP/FTP/API)")
+Rel(callCenterOp, callCenterSystem, "Получает актуальные ставки при звонках")
+
+@enduml

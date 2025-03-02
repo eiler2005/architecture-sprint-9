@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров — Открытие депозитов онлайн (MVP)
+LAYOUT_TOP_DOWN()
+
+Container_Boundary(siteBoundary, "Сайт (PHP + React)") {
+    Container(frontend, "Frontend (React)", "JavaScript/React", "Форма заявки на депозит, UI сайта")
+    Container(backend, "Backend (PHP)", "PHP", "Обработка запросов, передача заявок в кол-центр")
+}
+
+Container(internetBank, "Интернет-банк (.NET + MS SQL)", "ASP.NET MVC", "Личный кабинет, управление счетами (без авт. депозитов)")
+Container(absApi, "API для АБС (Integration Layer)", "Java/Spring (пример)", "Обеспечивает доступ к АБС через хранимые процедуры, без прямых обращений")
+Container(abs, "АБС (Oracle)", "Коммерческое решение", "Учет депозитов, счетов, кредитов")
+
+Container(callCenterInternal, "Система кол-центра (Java + PostgreSQL)", "Java Spring", "Внутренний кол-центр банка (не в фокусе MVP)")
+Container(telecom, "Telecom (Cisco)", "Аппаратно-программный комплекс", "Маршрутизация звонков")
+
+Container_Ext(partnerCRM, "CRM партнёрского кол-центра", "Внешний SaaS/CRM", "Принимает заявки, контактирует клиентов")
+
+Person(client, "Клиент")
+Person(boManager, "Менеджер бэк-офиса")
+Person(partnerOp, "Оператор партнёрского кол-центра")
+
+Rel(client, frontend, "Заполняет заявку, отправляет")
+Rel(frontend, backend, "POST /api/applyDeposit")
+Rel(backend, partnerCRM, "REST API: передача заявки на депозит")
+Rel(partnerOp, partnerCRM, "Получает заявку, звонит клиенту")
+Rel(partnerCRM, boManager, "Передаёт подтверждённую заявку (через e-mail/портал)")
+Rel(boManager, absApi, "Создаёт депозит (через REST/HTTP или gRPC)")
+Rel(absApi, abs, "Вызов хранимых процедур (PL/SQL)")
+Rel(internetBank, absApi, "Синхронизация данных о счетах и депозитах")
+@enduml
